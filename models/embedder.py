@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+import torch
 import numpy as np
 from loguru import logger
 
@@ -12,18 +13,21 @@ class ProductEmbedder:
         embedding = embedder.embed_description(description)
     """
 
-    def __init__(self, model_name: str = 'cointegrated/rubert-tiny2'):
+    def __init__(self, model_name: str = 'cointegrated/rubert-tiny2', use_gpu: bool = False):
         """
         Initialize the ProductEmbedder with a SentenceTransformer model.
 
         Args:
             model_name (str): The name of the SentenceTransformer model to use. Defaults to 'cointegrated/rubert-tiny2'.
+            use_gpu (bool): Flag indicating whether to use GPU if available.
         """
         try:
-            self.model = SentenceTransformer(model_name)
+            device = "cuda" if torch.cuda.is_available() and use_gpu else "cpu"
+            self.model = SentenceTransformer(model_name, device=device)
         except Exception as e:
             self.model = None
             logger.exception(f'Error loading "{model_name}" model: {e}')
+            raise RuntimeError(f"Failed to load the model '{self.model_name}' on the specified device '{device}'")
 
     def embed_description(self, description) -> np.ndarray:
         """

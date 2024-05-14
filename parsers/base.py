@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Tuple
 from parsers.product import Product
 from db.connector import SQLiteConnector
-from parsers.embedder import ProductEmbedder
+from models.embedder import ProductEmbedder
 from config import user_agent, parser_types, db_params
 import validators
 from tqdm import tqdm
