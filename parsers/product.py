@@ -21,14 +21,16 @@ class Product:
         __str__: Returns a string representation of the product.
     """
 
-    def __init__(self, source: str, url: str) -> None:
+    def __init__(
+        self, source: str, url: str, name: str = "", price: float = None
+    ) -> None:
         self.id: int = 0
         self.source = source
         self.url = url
-        self.name: str = ''
-        self.description: str = ''
-        self.price: float = None
-        self.image_url: str = ''
+        self.name = name
+        self.description: str = ""
+        self.price = price
+        self.image_url: str = ""
         self.name_emb: np.ndarray = None
         self.descr_emb: np.ndarray = None
 
@@ -38,7 +40,7 @@ class Product:
             f"source: {self.source}\n"
             f"url: {self.url}\n"
             f"name: {self.name}\n"
-            #f"description: {self.description}\n"
+            # f"description: {self.description}\n"
             f"price: {self.price}\n"
             f"image url: {self.image_url}"
         )

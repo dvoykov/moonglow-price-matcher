@@ -44,13 +44,13 @@ class BaseParser:
         """
         self.parser_type = parser_type
         self.prod_urls = prod_urls
-        self.headers = {'User-Agent': user_agent}
+        self.headers = {"User-Agent": user_agent}
         self.products: List[Product] = []
 
-        self.embedder = ProductEmbedder()
+        self.embedder = ProductEmbedder("sentence-transformers/all-MiniLM-L6-v2")
 
         if self.embedder.model is None:
-            raise RuntimeError('Error while loading embedder.')
+            raise RuntimeError("Error while loading embedder.")
 
     def __post_init__(self):
         """
@@ -60,15 +60,16 @@ class BaseParser:
         - RuntimeError: If there is an error while loading the embedder.
         """
         if self.parser_type not in parser_types:
-            raise ValueError(f'`parser_type` must be one of the following: {parser_types}')
-
+            raise ValueError(
+                f"`parser_type` must be one of the following: {parser_types}"
+            )
 
         if not self.prod_urls:
-            raise ValueError('The list of urls to parse is empty.')
+            raise ValueError("The list of urls to parse is empty.")
 
         for url in self.prod_urls:
             if not validators.url(url):
-                raise ValueError(f'The passed url `{url}` is not valid.')
+                raise ValueError(f"The passed url `{url}` is not valid.")
 
     def parse_catalog(self) -> Tuple[int, str]:
         """
@@ -113,7 +114,16 @@ class BaseParser:
         name_emb = None if p.name_emb is None else p.name_emb.tobytes()
         descr_emb = None if p.descr_emb is None else p.descr_emb.tobytes()
 
-        params = (p.source, p.url, p.name, p.description, p.price, p.image_url, name_emb, descr_emb)
+        params = (
+            p.source,
+            p.url,
+            p.name,
+            p.description,
+            p.price,
+            p.image_url,
+            name_emb,
+            descr_emb,
+        )
 
         status_code, status_message = conn.execute_query(query, params)
 
@@ -129,15 +139,15 @@ class BaseParser:
         err_qty = 0
         prc_qty = 0
 
-        for product in (pbar:=tqdm(self.products)):
-            pbar.set_description(f'Product #{prc_qty + 1} processed ...')
+        for product in (pbar := tqdm(self.products)):
+            pbar.set_description(f"Product #{prc_qty + 1} processed ...")
 
             status_code, status_message = self._parse_single_product(product)
 
             if status_code != 0:
-                print(f'Product parsing error: {product}')
-                print(f'Reason: {status_message}')
-                print('')
+                print(f"Product parsing error: {product}")
+                print(f"Reason: {status_message}")
+                print("")
                 err_qty += 1
 
             prc_qty += 1
@@ -158,18 +168,18 @@ class BaseParser:
         err_qty = 0
         prc_qty = 0
 
-        for product in (pbar:=tqdm(self.products)):
-            pbar.set_description(f'Product #{prc_qty + 1} processed ...')
+        for product in (pbar := tqdm(self.products)):
+            pbar.set_description(f"Product #{prc_qty + 1} processed ...")
 
             product.name_emb = self.embedder.embed_description(product.name)
             product.descr_emb = self.embedder.embed_description(product.description)
 
             if product.name_emb is None:
-                print(f'Error generating embedding for product name: {product}')
+                print(f"Error generating embedding for product name: {product}")
                 err_qty += 1
 
             if product.descr_emb is None:
-                print(f'Error generating embedding for product description: {product}')
+                print(f"Error generating embedding for product description: {product}")
                 err_qty += 1
 
             prc_qty += 1
@@ -187,7 +197,7 @@ class BaseParser:
         Returns:
             Tuple[int, int]: A tuple containing the total number of products saved and the number of errors encountered.
         """
-        conn = SQLiteConnector(db_params['db_file'])
+        conn = SQLiteConnector(db_params["db_file"])
         status_code, status_message = conn.connect()
 
         if status_code != 0:
@@ -197,15 +207,15 @@ class BaseParser:
         err_qty = 0
         svd_qty = 0
 
-        for product in (pbar:=tqdm(self.products)):
-            pbar.set_description(f'Product #{svd_qty + 1} saved ...')
+        for product in (pbar := tqdm(self.products)):
+            pbar.set_description(f"Product #{svd_qty + 1} saved ...")
 
             status_code, status_message = BaseParser.save_single_product(conn, product)
 
             if status_code != 0:
-                print(f'Product saving error: {product}')
-                print(f'Reason: {status_message}')
-                print('')
+                print(f"Product saving error: {product}")
+                print(f"Reason: {status_message}")
+                print("")
                 err_qty += 1
 
             svd_qty += 1
